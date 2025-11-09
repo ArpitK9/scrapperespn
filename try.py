@@ -1,7 +1,7 @@
 import logging
+import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoSuchElementException
 import re
 from datetime import datetime
 import csv
@@ -38,7 +38,7 @@ def read_urls(csv_file):
 def main():
     # ------ CONFIG PATHS HERE ------
     input_csv = "urls_list.csv"
-    output_csv = "matches.csv"
+    output_json = "matches.json"
 
     # Setup Chrome in headless mode
     chrome_options = Options()
@@ -130,35 +130,33 @@ def main():
             match_id = re.search(r'-([0-9]+)/[^/]+$', url)
             match_id = match_id.group(1) if match_id else "NA"
 
-        csv_columns = [
-            ("id", match_id),
-            ("city", city),
-            ("date", formatted_date),
-            ("player_of_match", player_of_match),
-            ("venue", venue),
-            ("team1", team_1),
-            ("team2", team_2),
-            ("toss_winner", toss_winner),
-            ("toss_decision", toss_decision),
-            ("winner", winner),
-            ("result", result),
-            ("result_margin", margin),
-            ("umpire1", umpire_1),
-            ("umpire2", umpire_2)
-        ]
+        match_data = {
+            "id": match_id,
+            "city": city,
+            "date": formatted_date,
+            "player_of_match": player_of_match,
+            "venue": venue,
+            "team1": team_1,
+            "team2": team_2,
+            "toss_winner": toss_winner,
+            "toss_decision": toss_decision,
+            "winner": winner,
+            "result": result,
+            "result_margin": margin,
+            "umpire1": umpire_1,
+            "umpire2": umpire_2
+        }
 
-        results.append([col[1] for col in csv_columns])
+        results.append(match_data)
         logger.info(f"Extracted data for match ID {match_id}")
 
-    # Write output CSV
+    # Write output JSON
     try:
-        with open(output_csv, mode='w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow([col[0] for col in csv_columns])
-            writer.writerows(results)
-        logger.info(f"Written results to {output_csv} for {len(results)} matches.")
+        with open(output_json, mode='w', encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+        logger.info(f"Written results to {output_json} for {len(results)} matches.")
     except Exception as ex:
-        logger.error(f"Failed to write output CSV: {ex}")
+        logger.error(f"Failed to write output JSON: {ex}")
 
     driver.quit()
     logger.info("Completed all URLs and closed Chrome WebDriver.")
